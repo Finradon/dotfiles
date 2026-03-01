@@ -6,8 +6,19 @@ repo_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 link_file() {
   local src="$1"
   local dest="$2"
+  local ts
+  ts="$(date +%Y%m%d%H%M%S)"
 
   mkdir -p "$(dirname "$dest")"
+  if [[ -L "$dest" && "$(readlink "$dest")" == "$src" ]]; then
+    printf 'already linked %s -> %s\n' "$dest" "$src"
+    return 0
+  fi
+  if [[ -e "$dest" || -L "$dest" ]]; then
+    local backup="${dest}.bak-${ts}"
+    mv "$dest" "$backup"
+    printf 'moved existing %s to %s\n' "$dest" "$backup"
+  fi
   ln -sfn "$src" "$dest"
   printf 'linked %s -> %s\n' "$dest" "$src"
 }
