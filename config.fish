@@ -24,9 +24,26 @@ set fish_greeting ""
 # Quick navigation / open
 # =========================
 alias n="gio open ."
-alias z="zeditor ."
-alias c="code ."
+#alias z="zed ."
+#alias c="code ."
 
+function z
+    if command -q zed
+        zed .
+    else
+        open -a Zed .
+    end
+end
+function c
+    if command -q code
+        code .
+    else if test (uname) = "Darwin"
+        open -a "Visual Studio Code" .
+    else
+        echo "VS Code command not found."
+        return 1
+    end
+end
 # go up fast
 alias ..='cd ..'
 alias ...='cd ../..'
@@ -47,15 +64,15 @@ abbr -a ls eza
 abbr -a ll 'eza -la'
 abbr -a cat bat
 abbr -a nano micro
-abbr -a py python
-abbr -a zed zeditor
+abbr -a py python3
+#abbr -a zed zeditor
 abbr -a fw fwupdmgr
-abbr -a pac 'sudo pacman -Syu'
+#abbr -a pac 'sudo pacman -Syu'
 
 # =========================
 # Python / venv
 # =========================
-alias venv='python -m venv .env'
+alias venv='python3 -m venv .env'
 alias va='source .env/bin/activate.fish'
 
 
