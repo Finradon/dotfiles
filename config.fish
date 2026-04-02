@@ -213,3 +213,80 @@ function up
         cd ..
     end
 end
+
+function ytmp3
+    if test (count $argv) -ne 2
+        echo "Usage: ytmp3 <youtube_link> <name>"
+        return 1
+    end
+
+    set url $argv[1]
+    set name $argv[2]
+
+    set target_dir ~/Music/Audio_Projects/$name
+    set output_file "$target_dir/$name.%(ext)s"
+
+    # create directory if it doesn't exist
+    mkdir -p $target_dir
+
+    # download and convert to mp3
+    yt-dlp \
+        --extract-audio \
+        --audio-format mp3 \
+        --audio-quality 0 \
+        -o $output_file \
+        $url
+
+    if test $status -eq 0
+        echo "Downloaded to $target_dir/$name.mp3"
+    else
+        echo "Download failed"
+        return 1
+    end
+end
+
+function audio2mp4
+    # defaults
+    set thumbnail "cover.png"
+    set audio "input.mp3"
+
+    # override if provided
+    if test (count $argv) -ge 1
+        set thumbnail $argv[1]
+    end
+    if test (count $argv) -ge 2
+        set audio $argv[2]
+    end
+
+    # basic checks
+    if not test -f $thumbnail
+        echo "Thumbnail not found: $thumbnail"
+        return 1
+    end
+
+    if not test -f $audio
+        echo "Audio file not found: $audio"
+        return 1
+    end
+
+    # output file = same name as audio, but .mp4
+    set output (string replace -r '\.[^.]+$' '.mp4' $audio)
+
+    ffmpeg -y \
+        -loop 1 -i $thumbnail \
+        -i $audio \
+        -c:v libx264 \
+        -tune stillimage \
+        -c:a aac \
+        -b:a 192k \
+        -pix_fmt yuv420p \
+        -shortest \
+        $output
+
+    if test $status -eq 0
+        echo "Created: $output"
+    else
+        echo "ffmpeg failed"
+        return 1
+    end
+end
