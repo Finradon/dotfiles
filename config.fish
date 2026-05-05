@@ -160,3 +160,42 @@ function up
         cd ..
     end
 end
+function acm
+    git add -A
+    git commit -m "$argv"
+end
+
+function can-merge --description "Check whether another branch can be merged into the current branch without changing anything"
+    if test (count $argv) -ne 1
+        echo "Usage: can-merge <branch>"
+        return 2
+    end
+
+    set target_branch $argv[1]
+    set current_branch (git branch --show-current 2>/dev/null)
+
+    if test -z "$current_branch"
+        echo "✗ Not inside a Git repository, or HEAD is detached."
+        return 2
+    end
+
+    if not git rev-parse --verify --quiet "$target_branch" >/dev/null
+        echo "✗ Branch or ref does not exist: $target_branch"
+        return 2
+    end
+
+    echo "Checking whether '$target_branch' can be merged into '$current_branch'..."
+    echo
+
+    if git merge-tree --write-tree HEAD "$target_branch" >/dev/null 2>&1
+        echo "✓ Merge possible"
+        echo "  '$target_branch' can be merged into '$current_branch' cleanly."
+        return 0
+    else
+        echo "✗ Merge would have conflicts"
+        echo "  '$target_branch' cannot be merged into '$current_branch' cleanly."
+        echo
+        echo "No files were changed. No commit was created."
+        return 1
+    end
+end
